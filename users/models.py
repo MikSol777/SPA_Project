@@ -43,3 +43,24 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class Payment(models.Model):
+    class PaymentMethod(models.TextChoices):
+        CASH = "cash", "Наличные"
+        TRANSFER = "transfer", "Перевод на счет"
+
+    user = models.ForeignKey("users.User", related_name="payments", on_delete=models.CASCADE)
+    payment_date = models.DateTimeField(auto_now_add=True)
+    paid_course = models.ForeignKey(
+        "lms.Course", related_name="course_payments", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    paid_lesson = models.ForeignKey(
+        "lms.Lesson", related_name="lesson_payments", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH)
+
+    def __str__(self):
+        target = self.paid_course or self.paid_lesson
+        return f"{self.user} -> {target or 'no target'} [{self.amount}]"

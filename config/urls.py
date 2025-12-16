@@ -19,6 +19,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path(
@@ -29,6 +30,10 @@ urlpatterns = [
                 "endpoints": {
                     "courses": "/api/courses/",
                     "lessons": "/api/lessons/",
+                    "users": "/api/users/",
+                    "auth_register": "/api/auth/register/",
+                    "auth_login": "/api/auth/token/",
+                    "auth_refresh": "/api/auth/token/refresh/",
                     "admin": "/admin/",
                 },
             }
@@ -37,6 +42,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('lms.urls')),
     path('api/', include('users.urls')),
+    path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 
 if settings.DEBUG:

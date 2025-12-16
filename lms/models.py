@@ -2,6 +2,7 @@ from django.db import models
 
 
 class Course(models.Model):
+    owner = models.ForeignKey("users.User", related_name="courses", on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255)
     preview = models.ImageField(upload_to="courses/", blank=True, null=True)
     description = models.TextField(blank=True)
@@ -11,6 +12,7 @@ class Course(models.Model):
 
 
 class Lesson(models.Model):
+    owner = models.ForeignKey("users.User", related_name="lessons", on_delete=models.CASCADE, null=True, blank=True)
     course = models.ForeignKey(Course, related_name="lessons", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)

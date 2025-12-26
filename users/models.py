@@ -49,6 +49,12 @@ class Payment(models.Model):
     class PaymentMethod(models.TextChoices):
         CASH = "cash", "Наличные"
         TRANSFER = "transfer", "Перевод на счет"
+        STRIPE = "stripe", "Stripe"
+
+    class PaymentStatus(models.TextChoices):
+        PENDING = "pending", "Ожидает оплаты"
+        PAID = "paid", "Оплачено"
+        CANCELLED = "cancelled", "Отменено"
 
     user = models.ForeignKey("users.User", related_name="payments", on_delete=models.CASCADE)
     payment_date = models.DateTimeField(auto_now_add=True)
@@ -60,6 +66,14 @@ class Payment(models.Model):
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH)
+    payment_status = models.CharField(
+        max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING
+    )
+    # Stripe fields
+    stripe_product_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_price_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_session_id = models.CharField(max_length=255, blank=True, null=True)
+    payment_url = models.URLField(blank=True, null=True)
 
     def __str__(self):
         target = self.paid_course or self.paid_lesson

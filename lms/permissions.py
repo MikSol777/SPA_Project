@@ -22,3 +22,11 @@ class IsOwnerOrModerator(BasePermission):
         owner = getattr(obj, "owner", None)
         return bool(request.user and request.user.is_authenticated and owner == request.user)
 
+
+
+
+
+
+
+
+

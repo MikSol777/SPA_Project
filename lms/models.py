@@ -21,3 +21,18 @@ class Lesson(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Subscription(models.Model):
+    """Модель подписки пользователя на курс"""
+    user = models.ForeignKey("users.User", related_name="subscriptions", on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name="subscriptions", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [["user", "course"]]
+        verbose_name = "Подписка"
+        verbose_name_plural = "Подписки"
+
+    def __str__(self):
+        return f"{self.user.email} подписан на {self.course.title}"

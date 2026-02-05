@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -8,6 +11,7 @@ from lms.models import Course, Lesson, Subscription
 from lms.paginators import CourseLessonPagination
 from lms.permissions import IsCourseOwner, IsLessonOwner, IsOwnerOrModerator
 from lms.serializers import CourseSerializer, LessonSerializer
+from lms.tasks import send_course_update_notification
 from users.permissions import IsModerator, MODERATOR_GROUP
 
 
@@ -46,6 +50,18 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        course = self.get_object()
+        last_updated = course.updated_at
+        now = timezone.now()
+
+        serializer.save(owner=self.request.user)
+
+        # Уведомляем подписчиков об обновлении курса,
+        # только если курс не обновлялся более 4 часов
+        if not last_updated or now - last_updated >= timedelta(hours=4):
+            send_course_update_notification.delay(course.id)
 
 
 class LessonListCreateView(generics.ListCreateAPIView):
@@ -86,7 +102,21 @@ class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
         return super().get_permissions()
 
     def perform_update(self, serializer):
+        lesson = self.get_object()
+        course = lesson.course
+        last_updated = course.updated_at
+        now = timezone.now()
+
         serializer.save(owner=self.request.user)
+
+        # Считаем обновление урока обновлением курса.
+        # Уведомляем подписчиков только если курс не обновлялся более 4 часов.
+        if not last_updated or now - last_updated >= timedelta(hours=4):
+            send_course_update_notification.delay(course.id)
+
+        # Обновляем время последнего обновления курса
+        course.updated_at = now
+        course.save(update_fields=["updated_at"])
 
 
 class SubscriptionAPIView(APIView):

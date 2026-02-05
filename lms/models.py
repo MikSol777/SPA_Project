@@ -2,10 +2,13 @@ from django.db import models
 
 
 class Course(models.Model):
-    owner = models.ForeignKey("users.User", related_name="courses", on_delete=models.CASCADE, null=True, blank=True)
+    owner = models.ForeignKey(
+        "users.User", related_name="courses", on_delete=models.CASCADE, null=True, blank=True
+    )
     title = models.CharField(max_length=255)
     preview = models.ImageField(upload_to="courses/", blank=True, null=True)
     description = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     def __str__(self):
         return self.title
